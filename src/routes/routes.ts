@@ -19,26 +19,29 @@ router.get("/user", (req: Request, res: Response) => {
 
 /**
  * @openapi
- * /add-user:
- *   post:
+ * '/api/users':
+ *  post:
  *     tags:
  *     - user
- *     summary: Create User.
-   *     requestBody:
-   *      required: true
+ *     summary: Register a user
+ *     requestBody:
+ *      required: true
+ *      content:
+ *        application/json:
+ *           schema:
+ *              $ref: '#/src/entities/user.entity.ts'
  *     responses:
-   *      200:
-   *        description: Success
-   *        content:
-   *          application/json:
-   *            schema:
-   *              $ref: '#/src/entities/user.ts'
-   *      409:
-   *        description: Conflict
-   *      400:
-   *        description: Bad request
-   */
-
+ *      200:
+ *        description: Success
+ *        content:
+ *          application/json:
+ *            schema:
+ *              $ref: '#/src/entities/user.entity.ts'
+ *      409:
+ *        description: Conflict
+ *      400:
+ *        description: Bad request
+ */
 
 router.post("/add-user", createUser);
 
