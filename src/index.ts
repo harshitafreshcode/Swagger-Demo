@@ -1,17 +1,18 @@
 import { Request, Response } from "express";
 import { AppDataSource } from "./config/db";
+import routes from "./routes/routes";
+import swaggerSpec1 from "./Swagger/swaggerConfig";
 
 const express = require('express');
 const app = express();
 const port = 8083;
 
-const { swaggerServe, swaggerSetup } = require('./Swagger/swaggerConfig')
+const swaggerJSDoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
 
-app.get("/user", (req: Request, res: Response) => {
-    res.send('results');
-});
-
-app.use("/api-docs", swaggerServe, swaggerSetup);
+console.log(swaggerSpec1, 'swaggerSpec1');
+app.use('/', routes)
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec1));
 
 
 AppDataSource.initialize().then(() => {

@@ -7,12 +7,13 @@
 //   friends: Friend[];
 
 
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Unique, OneToMany, OneToOne, JoinColumn, DeleteDateColumn } from "typeorm"
-
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Unique, OneToMany, OneToOne, JoinColumn, DeleteDateColumn, ManyToOne, ManyToMany, JoinTable, BeforeInsert } from "typeorm"
+import { Role } from "./role.entity"
+const bcrypt = require('bcrypt');
 
 @Entity({ name: "user" })
-export class user {
-    @PrimaryGeneratedColumn()
+export class User {
+    @PrimaryGeneratedColumn('increment')
     'id': number
 
     @Column()
@@ -26,6 +27,19 @@ export class user {
 
     @Column()
     'phone': string
+
+    @Column()
+    'password': string
+    @BeforeInsert()
+    async hashPassword() {
+        if (this.password) {
+            this.password = await bcrypt.hash(this.password, 10);
+        }
+    }
+
+    @ManyToMany(() => Role, role => role.id, { cascade: true, onDelete: 'CASCADE', eager: true })
+    @JoinTable({ name: "user_roles" })
+    "roles": Role
 
     @Column({ default: 1 })
     'status': number

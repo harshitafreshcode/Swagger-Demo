@@ -1,14 +1,21 @@
-const swaggerUI = require("swagger-ui-express");
-const YAML = require("yamljs");
-const swaggerJSDocs = YAML.load("api.yaml")
+import { Express, Request, Response } from "express";
+import swaggerJsdoc from "swagger-jsdoc";
 
-const options = {
-    customCss: `img {content:url(\'../logo.svg\'); height:auto;} `,
-    customfavIcon: "../favicon.ico",
-    customSiteTitle: "Code Improve API Doc",
+const swaggerJSDoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
 
+const swaggerDefinition = {
+    openapi: '3.0.0',
+    info: {
+        title: 'Express API for JSONPlaceholder',
+        version: '1.0.0',
+    },
 };
 
-//   module.exports = { swaggerServe: swaggerUI.serve, swaggerSetup: swaggerUI.setup(swaggerJSDocs) };
+const options = {
+    swaggerDefinition,
+    apis: ['src/routes/routes.ts'],
+};
+const swaggerSpec1 = swaggerJSDoc(options);
 
- module.exports = { swaggerServe: swaggerUI.serve, swaggerSetup: swaggerUI.setup(swaggerJSDocs,options) };
+export default swaggerSpec1

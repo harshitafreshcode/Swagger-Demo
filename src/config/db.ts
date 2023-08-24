@@ -1,7 +1,11 @@
 import "reflect-metadata"
 import { DataSource } from 'typeorm'
+import { User } from "../entities/user.entity";
+import { Role } from "../entities/role.entity";
+import { Permission } from "../entities/permissions.entity";
 
 const path = require("path");
+console.log(path.join(__dirname, "../", `src/entities/*{.ts,.js}`));
 
 export const AppDataSource = new DataSource({
     type: "postgres",
@@ -10,12 +14,13 @@ export const AppDataSource = new DataSource({
     username: "postgres",
     password: 'root',
     database: "swagger_demo",
-    // synchronize: true,
+    synchronize: true,
     logging: false,
-    migrations:  [path.join(__dirname, "../", `src/migrations/*{.ts,.js}`)],
+    migrations: [path.join(__dirname, "../", `src/migrations/*{.ts,.js}`)],
     migrationsTableName: "migrations",
-    // entities: [`src/api/domain/entities/*.ts`],
-    entities: [path.join(__dirname, "../", `src/entities/*{.ts,.js}`)],
+    entities: [User,Role,Permission],
+    // entities: [path.join(__dirname, "../", `src/entities/*{.ts,.js}`)],
+
 
 })
 

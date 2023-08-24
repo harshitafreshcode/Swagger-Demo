@@ -22,29 +22,29 @@ components:
       name: Authorization
 
 
-paths:
-  /user:
-    get:
-      tages:
-       - User demo 
-      security:
-       - ApiTokenss: []
-       - ApiKey: []
-      # summary: Returns a user details by ID.
-      # parameters:
-      #   - name: userId
-      #     in: path
-      #     required: true
-      #     description: Parameter description in CommonMark or HTML.
-      #     schema:
-      #       # type : integer
-      #       # format: int64
-      #       type: string
-      #       example: "Users String"
-      #       minimum: 1
-      responses: 
-        '200':
-          description: OK
+# paths:
+#   /user:
+#     get:
+#       tages:
+#        - User demo 
+#       security:
+#        - ApiTokenss: []
+#        - ApiKey: []
+#       # summary: Returns a user details by ID.
+#       # parameters:
+#       #   - name: userId
+#       #     in: path
+#       #     required: true
+#       #     description: Parameter description in CommonMark or HTML.
+#       #     schema:
+#       #       # type : integer
+#       #       # format: int64
+#       #       type: string
+#       #       example: "Users String"
+#       #       minimum: 1
+#       responses: 
+#         '200':
+#           description: OK
 
   paths:
   /users:
