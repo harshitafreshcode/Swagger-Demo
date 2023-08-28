@@ -1,80 +1,155 @@
 import express, { Request, Response } from 'express'
-import { createUser } from '../Controller/userController';
+import { createUser, editUser, getAllUser, removeUser } from '../Controller/userController';
 const router = express.Router()
+// Craete Schema to give ref
 /**
  * @openapi
-   * /user:
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       required:
+ *         - email
+ *         - phone
+ *         - password
+ *       properties:
+*                     first_name:
+*                       type: string
+*                       description: The user's first name.
+*                       example: Leanne Graham
+*                     last_name:
+*                       type: string
+*                       description: The user's last name.
+*                       example: Leanne Graham
+*                     email:
+*                       type: string
+*                       description: The user's email.
+*                       example: test@gmail.com
+*                     phone:
+*                       type: string
+*                       description: The user's phone.
+*                       example: 1234567893
+*                     password:
+*                       type: string
+*                       description: The user's password.
+*                       example: Test@123
+*                     role_id:
+*                       type: integer
+*                       description: The user's role id.
+*                       example: 1
+*                     status:
+*                       type: boolean
+*                       description: The user's status.
+*                       example: 1
+*/
+
+/**
+ * @openapi
+   * /get-all-user:
    *  get:
+   *     security:
+   *        - bearerAuth: []
    *     tags:
    *     - user
    *     summary: Get User.
    *     description: Responds if the app is up and running
    *     responses:
    *       200:
-   *         description: App is up and running
+   *         description: Get All User Successfully.
+   *       409:
+   *         description: Conflict
+   *       400:
+   *         description: Bad request
+   *           
    */
-router.get("/user", (req: Request, res: Response) => {
-    res.send('results 1234');
-});
+router.get("/get-all-user", getAllUser);
 
 /**
  * @openapi
- * '/api/users':
- *  post:
+ * /add-user:
+ *   post:
+ *     security:
+ *       - bearerAuth: []
  *     tags:
- *     - user
- *     summary: Register a user
+ *       - user
+ *     summary: create a user
  *     requestBody:
- *      required: true
- *      content:
- *        application/json:
+ *       required: true
+ *       content:
+ *         application/json:
  *           schema:
- *              $ref: '#/src/entities/user.entity.ts'
+ *             $ref: '#/components/schemas/User'
  *     responses:
- *      200:
- *        description: Success
- *        content:
- *          application/json:
- *            schema:
- *              $ref: '#/src/entities/user.entity.ts'
- *      409:
- *        description: Conflict
- *      400:
- *        description: Bad request
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       409:
+ *         description: Conflict
+ *       400:
+ *         description: Bad request
  */
-
 router.post("/add-user", createUser);
+
+/**
+*@openapi
+* /edit-user/{id}:
+*   patch:
+*    tags:
+*      - user
+*    summary: Update a single User
+*    parameters:
+*      - name: id
+*        in: path
+*        description: The id of the User
+*        required: true
+*    requestBody:
+*       required: true
+*       content:
+*         application/json:
+*           schema:
+*             $ref: '#/components/schemas/User'
+*    responses:
+*       200:
+*         description: Success
+*         content:
+*          application/json:
+*           schema:
+*              $ref: '#/components/schemas/User'
+*       403:
+*         description: Forbidden
+*       404:
+*         description: User not found
+*/
+
+router.patch("/edit-user/:id", editUser);
+
+/**
+* @openapi
+* /delete-user/{id}:
+*    delete:
+*     tags:
+*     - user
+*     summary: Delete a single user
+*     parameters:
+*      - name: id
+*        in: path
+*        description: The id of the product
+*        required: true
+
+*     responses:
+*       200:
+*         description: User deleted
+*       403:
+*         description: Forbidden
+*       404:
+*         description: Product not found
+*/
+
+router.delete("/delete-user/:id", removeUser);
 
 export default router;
 
 
-// *               type: object
-// *               properties:
-// *                     first_name:
-// *                       type: string
-// *                       description: The user's first name.
-// *                       example: Leanne Graham
-// *                     last_name:
-// *                       type: string
-// *                       description: The user's last name.
-// *                       example: Leanne Graham
-// *                     email:
-// *                       type: string
-// *                       description: The user's email.
-// *                       example: test@gmail.com
-// *                     phone:
-// *                       type: string
-// *                       description: The user's phone.
-// *                       example: 1234567893
-// *                     password:
-// *                       type: string
-// *                       description: The user's password.
-// *                       example: Test@123
-// *                     rolesId:
-// *                       type: integer
-// *                       description: The user's rolesId.
-// *                       example: 1
-// *                     status:
-// *                       type: boolean
-// *                       description: The user's status.
-// *                       example: true

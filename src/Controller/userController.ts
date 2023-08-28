@@ -1,19 +1,32 @@
 import { Request, Response } from "express";
-import { ErrorResponse, successResponse } from "../helpers/apiResponse";
-import { FindAllUser, addUser } from "../model/user.model";
+import { ErrorResponse, successResponse, successResponseWithCount } from "../helpers/apiResponse";
+import { FindAllUser, addUser, deleteUser, updateUser } from "../model/user.model";
+
+function isBlank(value: any) {
+    let result = value === undefined || value === null || value.trim() === '';
+    console.log(result, 'result');
+    if (result) {
+        return true;
+    }
+    return result
+}
+const x: any = '  '
+console.log(isBlank(x.trim()), 'x');
+
+
 
 export const createUser = (req: Request, res: Response): any => {
     try {
-        console.log('req body', req.body);
 
         let where: object = { email: req.body.email };
         let payloadRequest: object = {
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
+            first_name: req.body.first_name,
+            last_name: req.body.last_name,
             password: req.body.password,
             email: req.body.email,
             phone: req.body.phone,
             status: req.body.status ?? 1,
+            role_id: req.body.role_id
         };
         addUser(where, payloadRequest, (err: any, data: any) => {
             if (err) {
@@ -31,16 +44,57 @@ export const createUser = (req: Request, res: Response): any => {
 
 export const getAllUser = (req: Request, res: Response): any => {
     try {
-        let where: object = { email: req.body.email };
+        let where: object = { id: req.body?.id };
+
+        FindAllUser(where, (err: any, data: any, count: number) => {
+            if (err) {
+                return ErrorResponse(res, err);
+            } else {
+                return successResponseWithCount(res, "Get All User Successfully.", data, count);
+            }
+        });
+    } catch (e) {
+        console.log(e);
+        ErrorResponse(res, e);
+    }
+};
+
+export const removeUser = (req: Request, res: Response): any => {
+    try {
+        console.log('123');
+        console.log(req.params.id, 'req.query.id');
+        let where: object = { id: req.params.id };
+        deleteUser(where, (err: any, data: any) => {
+            if (err) {
+                return ErrorResponse(res, err);
+            } else {
+                return successResponse(res, "User Added Successfully", data);
+            }
+        });
+    } catch (e) {
+        console.log(e);
+        ErrorResponse(res, e);
+    }
+};
+
+export const editUser = (req: Request, res: Response): any => {
+    try {
+        function isBlank(value: any) {
+            return value === undefined || value === null || value === '';
+        }
+
+        let where: object = { id: req.params.id };
+        console.log(isBlank(req.body?.last_name.trim()), 'req.body?.first_name');
         let payloadRequest: object = {
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
-            password: req.body.password,
-            email: req.body.email,
-            phone: req.body.phone,
-            status: req.body.status ?? 1,
+            first_name: req.body?.first_name,
+            last_name: isBlank(req.body?.last_name.trim()),
+            password: req.body?.password,
+            email: req.body?.email,
+            phone: req.body?.phone,
+            status: req.body?.status ?? 1,
+            role_id: req.body?.role_id
         };
-        FindAllUser(where, payloadRequest, (err: any, data: any) => {
+        updateUser(where, payloadRequest, (err: any, data: any) => {
             if (err) {
                 return ErrorResponse(res, err);
             } else {

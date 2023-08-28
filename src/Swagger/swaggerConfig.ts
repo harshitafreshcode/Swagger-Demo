@@ -10,11 +10,30 @@ const swaggerDefinition = {
         title: 'Express API for JSONPlaceholder',
         version: '1.0.0',
     },
+    // servers: [
+    //     {
+
+    //     }]
+    components: {
+        securitySchemes: {
+            bearerAuth: {
+                type: 'http',
+                scheme: 'bearer',
+                bearerFormat: 'JWT',
+            }
+        }
+    },
+    // security: [
+    //     {
+    //         bearerAuth: []
+    //     }
+    // ]
+
 };
 
 const options = {
     swaggerDefinition,
-    apis: ['src/routes/routes.ts'],
+    apis: ['src/routes/routes.ts', 'src/routes/user.ts'],
 };
 const swaggerSpec1 = swaggerJSDoc(options);
 

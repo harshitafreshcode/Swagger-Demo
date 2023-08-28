@@ -33,13 +33,14 @@ export class User {
     @BeforeInsert()
     async hashPassword() {
         if (this.password) {
+            console.log(this.password, '***************');
             this.password = await bcrypt.hash(this.password, 10);
         }
     }
 
-    @ManyToMany(() => Role, role => role.id, { cascade: true, onDelete: 'CASCADE', eager: true })
-    @JoinTable({ name: "user_roles" })
-    "roles": Role
+    @ManyToOne(() => Role, role => role.id, { cascade: true, onDelete: 'CASCADE', eager: true })
+    @JoinColumn({ name: "role_id" })
+    "role": Role
 
     @Column({ default: 1 })
     'status': number

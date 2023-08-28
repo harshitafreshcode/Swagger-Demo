@@ -1,53 +1,103 @@
 import { AppDataSource } from "../config/db";
+import { hashPassword } from "../config/utilies";
 import { Role } from "../entities/role.entity";
 import { User } from "../entities/user.entity";
 
 export async function addUser(where: any, data: any, callback: any) {
     try {
-        let { roleId } = where
+        // let { email } = where
+        const userRepository = AppDataSource.getRepository(User);
+
         const res = JSON.parse(JSON.stringify(data));
+        const roleRepository = AppDataSource.getRepository(Role);
+        const roleList = await roleRepository
+            .createQueryBuilder('role')
+            .where('role.id =:id', { id: res.role_id })
+            .getOne();
 
-        await AppDataSource.manager.save(User, res).then(async (response: any) => {
+        res.role = roleList;
 
-            // const user = JSON.parse(JSON.stringify(response));
+        const hash_password = await hashPassword(res.password)
+        res.password = hash_password
 
-            // var userdata = {
-            //     email: user?.email,
-            //     user_id: user.id,
-            //     phone: user?.phone,
-            //     roleId: roleId,
-            //     isAdmin: roleId == 1 ? true : false,
-            // };
+        //......... If you want to store in memory not in db then it is used
+        // const user = userRepository.create(res);
+        // console.log(user, 'user');
+        // callback('', user)
 
-            // // const token = await sign(userdata);
-            // // user.authToken = token;
+        await AppDataSource
+            .createQueryBuilder()
+            .insert()
+            .into(User)
+            .values(res)
+            .returning('*')
+            .execute()
+            .then((result) => {
+                console.log(result, 'result');
+                callback('', result.raw[0])
+            }).catch((err) => {
+                callback(err, '')
+            });
 
-            const roleRepository = AppDataSource.getRepository(Role);
-            // const userrole = await roleRepository.findOneBy({ id: Number(roleId) });
+        let user = await AppDataSource.manager.save(User, res)
+        console.log(user, 'user');
+        callback('', user)
 
-            // user.role = userrole;
-            // const userRepository = AppDataSource.getRepository(User);
+        // await AppDataSource
+        //     .createQueryBuilder()
+        //     .insert()
+        //     .into(User)
+        //     .values(res)
+        //     // .orUpdate(["email"])
+        //     .execute()
+        //     .then((result) => {
+        //         callback('', result)
+        //     }).catch((err) => {
+        //         callback(err, '')
 
-            // const userDetails = await userRepository.findOneBy({ id: user.id });
+        //     });
+    } catch (error: any) {
+        console.log(error);
+        return callback(error, '')
+    }
+}
 
-            // await AppDataSource.manager.update(User, user.id, user);
+export async function updateUser(where: any, data: any, callback: any) {
+    try {
+        // let { email } = where
+        const userRepository = AppDataSource.getRepository(User);
 
-            if (response) {
-                callback("", response);
-            } else {
-                callback("error", "");
-            }
-
-        }).catch((err: any) => {
-
-            var errMsg = err.driverError?.detail;
-
-            if (errMsg.includes("phone")) {
-                errMsg = 'Mobile Number Already Registered';
-            }
-
-            callback(errMsg, "");
-        });
+        const res = JSON.parse(JSON.stringify(data));
+        const roleRepository = AppDataSource.getRepository(Role);
+        console.log(res.role_id);
+        if (res.role_id) {
+            const roleList = await roleRepository
+                .createQueryBuilder('role')
+                .where('role.id =:id', { id: res.role_id })
+                .getOne();
+            console.log(roleList);
+            res.role = roleList;
+            delete res.role_id;
+        }
+        if (res.password) {
+            const hash_password = await hashPassword(res.password)
+            console.log(hash_password, 'hash_password');
+            res.password = hash_password
+        }
+        console.log(res, 'res');
+        await AppDataSource
+            .createQueryBuilder()
+            .update(User)
+            .set(res)
+            .where('id =:id', { id: where.id })
+            .execute()
+            .then((result) => {
+                console.log(result);
+                callback('', result)
+            }).catch((err) => {
+                console.log(err, 'err');
+                callback(err, '')
+            });
 
     } catch (error: any) {
         console.log(error);
@@ -55,14 +105,13 @@ export async function addUser(where: any, data: any, callback: any) {
     }
 }
 
-
-export async function FindAllUser(where: any, data: any, callback: any) {
+export async function FindAllUser(where: any, callback: any) {
     try {
         const userId = 1;
 
         const userRepository = AppDataSource.getRepository(User);
 
-        const usersList = await userRepository
+        const [usersList,count] = await userRepository
             .createQueryBuilder('user')
             // .innerJoin('user.module', 'module')
             // .innerJoin('module.modulePermissions', 'modulePermission')
@@ -70,9 +119,8 @@ export async function FindAllUser(where: any, data: any, callback: any) {
             // .innerJoin('permission.roles', 'role')
             // .innerJoin('role.users', 'user')
             // .where('user.id = :userId', { userId })
-            .getMany();
-
-            return callback('', usersList)
+            .getManyAndCount();
+        return callback('', usersList,count)
 
     } catch (error: any) {
         console.log(error);
@@ -80,4 +128,23 @@ export async function FindAllUser(where: any, data: any, callback: any) {
     }
 }
 
+export async function deleteUser(where: any, callback: any) {
+    try {
+        await AppDataSource
+            .createQueryBuilder()
+            .delete()
+            .from(User)
+            .where('id = :userId', { userId: where.id })
+            .execute()
+            .then((result) => {
+                callback('', result)
+            }).catch((err) => {
+                callback(err, '')
+            });
+
+    } catch (error: any) {
+        console.log(error);
+        return callback(error, '')
+    }
+}
 
