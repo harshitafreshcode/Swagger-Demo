@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express'
-import { createUser, editUser, getAllUser, removeUser } from '../Controller/userController';
+import { createUser, createVideos, editUser, getAllUser, getVideosInfo, removeUser } from '../Controller/userController';
 const router = express.Router()
 // Craete Schema to give ref
 /**
@@ -149,6 +149,8 @@ router.patch("/edit-user/:id", editUser);
 */
 
 router.delete("/delete-user/:id", removeUser);
+router.post('/creat-vidoes',createVideos)
+router.post('/get-vidoes-info',getVideosInfo)
 
 export default router;
 

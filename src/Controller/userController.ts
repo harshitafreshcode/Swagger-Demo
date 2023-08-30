@@ -1,6 +1,145 @@
 import { Request, Response } from "express";
 import { ErrorResponse, successResponse, successResponseWithCount } from "../helpers/apiResponse";
-import { FindAllUser, addUser, deleteUser, updateUser } from "../model/user.model";
+import { FindAllUser, addUser, deleteUser, splitVidoes, updateUser } from "../model/user.model";
+const fs = require('fs');
+
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+const ffprobePath = require('@ffprobe-installer/ffprobe').path;
+
+const ffmpeg = require('fluent-ffmpeg');
+ffmpeg.setFfmpegPath(ffmpegPath);
+ffmpeg.setFfprobePath(ffprobePath);
+
+export const createVideos = async (req: Request, res: Response) => {
+    try {
+
+        const inputFilePath = 'src/inputFile/v1.mp4';
+        const outputDirectory = 'src/clip/';
+        const numClips = 2; // Number of clips to create
+        const clipDuration = 30; // Duration of each clip in seconds
+
+
+        if (!fs.existsSync(outputDirectory)) {
+            fs.mkdirSync(outputDirectory);
+        }
+
+        const promises = [];
+
+        for (let i = 0; i < numClips; i++) {
+
+            const clipOutputPath = `${outputDirectory}clip_${i + 1}.mp4`;
+            const startTime = i * clipDuration;
+
+            await ffmpeg()
+                .input(inputFilePath)
+                .setStartTime(startTime)
+                .setDuration(clipDuration)
+                .output(clipOutputPath)
+                .on('end', () => {
+                    console.log(`Clip ${i + 1} cutting process finished.`);
+                    // return successResponse(res, "Video Created Successfully", []);
+
+                })
+                .on('error', (err: any) => {
+
+                    console.error(`Error cutting clip ${i + 1}:`, err);
+                    return successResponse(res, "Video Created Successfully", err);
+                })
+                .run();
+        }
+
+
+        return successResponse(res, "Video Created Successfully", []);
+
+
+
+        // ffmpeg()
+        //     .input(inputFilePath)
+        //     .setStartTime(startTime)
+        //     .setDuration(duration)
+        //     .output(outputFilePath)
+        //     .on('end', () => {
+        //         console.log('Video cutting process finished.');
+        // return successResponse(res, "Video Created Successfully", []);
+
+        //     })
+        //     .on('error', (err: any) => {
+        //         console.error('Error cutting video:', err);
+        // return successResponse(res, "Video Created Successfully", err);
+
+        //     })
+        //     .run();
+
+
+        // splitVidoes(where, payloadRequest, (err: any, data: any) => {
+        //     if (err) {
+        //         return ErrorResponse(res, err);
+        //     } else {
+        //     }
+        // });
+    } catch (e) {
+        console.log(e);
+        ErrorResponse(res, e);
+    }
+};
+
+export const getVideosInfo = async (req: Request, res: Response) => {
+    try {
+
+        const inputFilePath = 'src/inputFile/v1.mp4';
+        // const outputDirectory = 'src/clip/';
+        // const numClips = 2; // Number of clips to create
+        // const clipDuration = 30; // Duration of each clip in seconds
+
+
+        // if (!fs.existsSync(outputDirectory)) {
+        //     fs.mkdirSync(outputDirectory);
+        // }
+
+        await ffmpeg.ffprobe(inputFilePath, (err: any, metadata: any) => {
+            if (err) {
+                console.error('Error getting clip details:', err);
+            } else {
+                console.log('Clip details:', metadata);
+                return successResponse(res, "Video Created Successfully", metadata.format.duration);
+            }
+        });
+
+
+
+
+
+
+        // ffmpeg()
+        //     .input(inputFilePath)
+        //     .setStartTime(startTime)
+        //     .setDuration(duration)
+        //     .output(outputFilePath)
+        //     .on('end', () => {
+        //         console.log('Video cutting process finished.');
+        // return successResponse(res, "Video Created Successfully", []);
+
+        //     })
+        //     .on('error', (err: any) => {
+        //         console.error('Error cutting video:', err);
+        // return successResponse(res, "Video Created Successfully", err);
+
+        //     })
+        //     .run();
+
+
+        // splitVidoes(where, payloadRequest, (err: any, data: any) => {
+        //     if (err) {
+        //         return ErrorResponse(res, err);
+        //     } else {
+        //     }
+        // });
+    } catch (e) {
+        console.log(e);
+        ErrorResponse(res, e);
+    }
+};
+
 
 function isBlank(value: any) {
     let result = value === undefined || value === null || value.trim() === '';
@@ -10,11 +149,6 @@ function isBlank(value: any) {
     }
     return result
 }
-const x: any = '  '
-console.log(isBlank(x.trim()), 'x');
-
-
-
 export const createUser = (req: Request, res: Response): any => {
     try {
 
@@ -106,3 +240,4 @@ export const editUser = (req: Request, res: Response): any => {
         ErrorResponse(res, e);
     }
 };
+

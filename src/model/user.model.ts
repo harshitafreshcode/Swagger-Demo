@@ -148,3 +148,45 @@ export async function deleteUser(where: any, callback: any) {
     }
 }
 
+export async function splitVidoes(where: any, data: any, callback: any) {
+    try {
+        // let { email } = where
+        const userRepository = AppDataSource.getRepository(User);
+
+        const res = JSON.parse(JSON.stringify(data));
+        const roleRepository = AppDataSource.getRepository(Role);
+        console.log(res.role_id);
+        if (res.role_id) {
+            const roleList = await roleRepository
+                .createQueryBuilder('role')
+                .where('role.id =:id', { id: res.role_id })
+                .getOne();
+            console.log(roleList);
+            res.role = roleList;
+            delete res.role_id;
+        }
+        if (res.password) {
+            const hash_password = await hashPassword(res.password)
+            console.log(hash_password, 'hash_password');
+            res.password = hash_password
+        }
+        console.log(res, 'res');
+        await AppDataSource
+            .createQueryBuilder()
+            .update(User)
+            .set(res)
+            .where('id =:id', { id: where.id })
+            .execute()
+            .then((result) => {
+                console.log(result);
+                callback('', result)
+            }).catch((err) => {
+                console.log(err, 'err');
+                callback(err, '')
+            });
+
+    } catch (error: any) {
+        console.log(error);
+        return callback(error, '')
+    }
+}
