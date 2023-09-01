@@ -1,3 +1,4 @@
+import { text } from "body-parser";
 import { AppDataSource } from "../config/db";
 import { hashPassword } from "../config/utilies";
 import { Role } from "../entities/role.entity";
@@ -107,20 +108,24 @@ export async function updateUser(where: any, data: any, callback: any) {
 
 export async function FindAllUser(where: any, callback: any) {
     try {
-        const userId = 1;
+        const status = true;
 
         const userRepository = AppDataSource.getRepository(User);
 
-        const [usersList,count] = await userRepository
-            .createQueryBuilder('user')
-            // .innerJoin('user.module', 'module')
-            // .innerJoin('module.modulePermissions', 'modulePermission')
-            // .innerJoin('modulePermission.permission', 'permission')
-            // .innerJoin('permission.roles', 'role')
-            // .innerJoin('role.users', 'user')
-            // .where('user.id = :userId', { userId })
-            .getManyAndCount();
-        return callback('', usersList,count)
+        const usersList = await userRepository
+            .createQueryBuilder("user")
+
+        if (status) {
+            usersList.leftJoinAndSelect("user.role", "role")
+        }
+
+        usersList.select(['user'])
+            .addSelect(status ? ['role.role_name', 'role.id'] : [])
+        // .where("user.name = :name", { name: "Timber" })
+        const list = await usersList.getMany();
+
+
+        return callback('', list, 2)
 
     } catch (error: any) {
         console.log(error);

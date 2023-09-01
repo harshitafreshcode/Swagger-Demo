@@ -52,7 +52,7 @@ async function cutVideo(inputPath: string, videoTitle: string) {
             const outputFileName = `clip-${videoTitle}-${i + 1}.mp4`;
             const outputPath = path.join(outputFolder, outputFileName);
 
-            await new Promise((resolve:any, reject:any) => {
+            await new Promise((resolve: any, reject: any) => {
                 ffmpeg()
                     .input(inputPath)
                     .outputOptions(['-c:v libx264', '-crf 22'])
@@ -63,7 +63,7 @@ async function cutVideo(inputPath: string, videoTitle: string) {
                         console.log(`Clip ${i + 1} created`);
                         resolve();
                     })
-                    .on('error', (err:any) => {
+                    .on('error', (err: any) => {
                         console.error(`Error creating clip ${i + 1}:`, err);
                         reject(err);
                     })
@@ -121,7 +121,7 @@ async function getVideoDuration(videoPath: string): Promise<number> {
 //
 
 
-async function generateClipsSequentially(inputPath: string, videoTitle: string, numClips: number) {
+async function generateClipsSequentially(inputPath: any, videoTitle: string, numClips: number) {
     const outputFolder = path.join('src/', 'clip');
     // fs.mkdirSync(outputFolder, { recursive: true });
 
@@ -133,10 +133,11 @@ async function generateClipsSequentially(inputPath: string, videoTitle: string, 
         const outputPath = path.join(outputFolder, outputFileName);
 
         try {
-            await new Promise((resolve:any, reject:any) => {
+            await new Promise((resolve: any, reject: any) => {
                 ffmpeg()
                     .input(inputPath)
-                    .outputOptions(['-c:v libx264', '-crf 22'])
+                    // .outputOptions(['-c:v libx264', '-crf 22'])
+                    .outputOptions('-fs 10M') // Limit clip size to 10MB (adjust as needed)
                     .inputOption(`-ss ${startTime}`)
                     .inputOption(`-t ${duration}`)
                     .output(outputPath)
@@ -144,8 +145,10 @@ async function generateClipsSequentially(inputPath: string, videoTitle: string, 
                         console.log(`Clip ${i + 1} created`);
                         resolve();
                     })
-                    .on('error', (err:any) => {
+                    .on('error', (err: any, stdout: any, stderr: any) => {
                         console.error(`Error creating clip ${i + 1}:`, err);
+                        console.error('FFmpeg STDERR:', stderr); // Log FFmpeg's error output
+
                         reject(err);
                     })
                     .run();
@@ -164,14 +167,43 @@ export const generateClip = async (req: Request, res: Response) => {
         const { youtubeURL } = req.body;
         const videoInfo = await ytdl.getInfo(youtubeURL);
         const videoTitle = videoInfo.videoDetails.title.replace(/[^\w\s]/gi, '');
+        const outputDirectory = 'src/clip';
 
-        const videoPath = await downloadVideo(youtubeURL);
-        const videoDuration = Math.floor(await getVideoDuration(videoPath));
-        const numClips = Math.ceil(videoDuration / 30);
+        const duration = parseInt(videoInfo.videoDetails.lengthSeconds);
+        const clipDuration = 30; // 30 seconds per clip
 
-        await generateClipsSequentially(videoPath, videoTitle, numClips);
+        let clipNumber = 1;
+        let startTime = 0;
 
-        res.send(videoPath);
+        while (startTime < duration) {
+            const clipTitle = `clip_${clipNumber}.mp4`;
+            const outputPath = path.join(outputDirectory, clipTitle);
+
+            const video = ytdl(youtubeURL, { filter: 'audioandvideo' });
+
+            await new Promise((resolve: any, reject: any) => {
+                ffmpeg(video)
+                    .setStartTime(startTime)
+                    .setDuration(clipDuration)
+                    .outputOptions('-c:v libx264')
+                    .output(outputPath)
+                    .on('end', () => {
+                        console.log(`Clip ${clipNumber} created`);
+                        resolve();
+                    })
+                    .on('error', (err: any) => {
+                        console.error(`Error creating clip ${clipNumber}:`, err);
+                        reject(err);
+                    })
+                    .run();
+            });
+
+            startTime += clipDuration;
+            clipNumber++;
+        }
+
+
+        res.status(201).json({ message: "Your Video Clip Is Ready", youtubeURL: youtubeURL });
     } catch (error) {
         console.error('Error generating clips:', error);
         res.status(500).json({ message: 'Error generating clips' });
